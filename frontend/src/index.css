@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+@layer utilities {
+  .hide-on-mobile {
+    @apply hidden sm:table-cell;
+  }
+}
