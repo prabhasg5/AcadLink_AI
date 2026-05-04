@@ -25,6 +25,7 @@ export default function App() {
             
             <Route path="/faculty" element={<FacultyDashboard />} />
             <Route path="/faculty/post" element={<FacultyPostJob />} />
+            <Route path="/faculty/edit/:jobId" element={<FacultyPostJob />} />
             
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/jobs" element={<Navigate to="/admin" replace />} />

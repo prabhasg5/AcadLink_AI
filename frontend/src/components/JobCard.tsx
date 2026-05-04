@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { Opportunity } from "@/src/store/MockAppStore";
 import { Card, CardContent } from "@/src/components/ui/Card";
 import { Badge } from "@/src/components/ui/Badge";
-import { Building2, DollarSign, Bookmark, BookmarkCheck, BarChart } from "lucide-react";
+import { Building2, DollarSign, Bookmark, BookmarkCheck, BarChart, Send, ExternalLink, Calendar, FileText, Link as LinkIcon, CheckCircle2 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 
 interface JobCardProps {
@@ -10,10 +10,13 @@ interface JobCardProps {
   isWatchlisted?: boolean;
   onToggleWatchlist?: () => void;
   onAnalyse?: () => void;
+  onApply?: () => void;
   showActions?: boolean;
+  hasApplied?: boolean;
 }
 
-export function JobCard({ job, isWatchlisted, onToggleWatchlist, onAnalyse, showActions = true }: JobCardProps) {
+export function JobCard({ job, isWatchlisted, onToggleWatchlist, onAnalyse, onApply, showActions = true, hasApplied = false }: JobCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
   return (
     <Card className="hover:border-blue-200 transition-colors duration-200 overflow-hidden group">
       <CardContent className="p-5">
@@ -41,6 +44,12 @@ export function JobCard({ job, isWatchlisted, onToggleWatchlist, onAnalyse, show
                   <span className="text-gray-400 text-xs">
                     Posted by {job.postedBy}
                   </span>
+                  {job.applicationType === "external" && (
+                    <Badge variant="outline" className="text-[10px] uppercase tracking-wider border-amber-200 text-amber-700 bg-amber-50">External</Badge>
+                  )}
+                  {job.applicationType === "internal" && (
+                    <Badge variant="outline" className="text-[10px] uppercase tracking-wider border-blue-200 text-blue-700 bg-blue-50">Internal</Badge>
+                  )}
                 </div>
               </div>
 
@@ -52,6 +61,19 @@ export function JobCard({ job, isWatchlisted, onToggleWatchlist, onAnalyse, show
                         Analyse Fit
                       </Button>
                    )}
+                   {onApply && (
+                     hasApplied ? (
+                       <Button size="sm" disabled className="bg-emerald-50 text-emerald-700 border border-emerald-200 opacity-100 cursor-not-allowed">
+                          <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                          Applied
+                       </Button>
+                     ) : (
+                       <Button size="sm" onClick={onApply} className="bg-blue-600 hover:bg-blue-700 text-white">
+                          {job.applicationType === "external" ? <ExternalLink className="w-4 h-4 mr-1.5" /> : <Send className="w-4 h-4 mr-1.5" />}
+                          Apply
+                       </Button>
+                     )
+                   )}
                    {onToggleWatchlist && (
                       <Button variant="ghost" size="icon" onClick={onToggleWatchlist} className={isWatchlisted ? "text-blue-600" : "text-gray-400 hover:text-gray-900"}>
                         {isWatchlisted ? <BookmarkCheck className="w-5 h-5 fill-current" /> : <Bookmark className="w-5 h-5" />}
@@ -61,9 +83,19 @@ export function JobCard({ job, isWatchlisted, onToggleWatchlist, onAnalyse, show
               )}
             </div>
 
-            <p className="mt-4 text-sm text-gray-600 line-clamp-2">
-              {job.description}
-            </p>
+            <div className="mt-4">
+              <p className={`text-sm text-gray-600 ${!isExpanded && 'line-clamp-2'}`}>
+                {job.description}
+              </p>
+              {job.description.length > 120 && (
+                <button 
+                  onClick={() => setIsExpanded(!isExpanded)} 
+                  className="text-xs font-medium text-blue-600 hover:text-blue-800 mt-1"
+                >
+                  {isExpanded ? "See less" : "See more"}
+                </button>
+              )}
+            </div>
 
             <div className="mt-4 flex flex-wrap gap-2">
               {job.skillsRequired.map((skill, i) => (
@@ -80,6 +112,37 @@ export function JobCard({ job, isWatchlisted, onToggleWatchlist, onAnalyse, show
                 </Badge>
               )}
             </div>
+
+            {/* Exam Details & Resources */}
+            {(job.examDetails?.date || job.examDetails?.pattern || (job.resources && job.resources.length > 0)) && (
+              <div className="mt-4 pt-4 border-t border-gray-100 flex flex-col sm:flex-row gap-6">
+                
+                {job.examDetails && (job.examDetails.date || job.examDetails.pattern) && (
+                  <div className="flex-1">
+                    <h4 className="text-xs font-semibold text-gray-900 uppercase tracking-wider mb-2 flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-gray-400" /> Exam Details</h4>
+                    <ul className="space-y-1">
+                      {job.examDetails.date && <li className="text-sm text-gray-600"><span className="text-gray-500">Date:</span> {new Date(job.examDetails.date).toLocaleDateString()}</li>}
+                      {job.examDetails.pattern && <li className="text-sm text-gray-600"><span className="text-gray-500">Pattern:</span> {job.examDetails.pattern}</li>}
+                    </ul>
+                  </div>
+                )}
+
+                {job.resources && job.resources.length > 0 && (
+                  <div className="flex-1">
+                    <h4 className="text-xs font-semibold text-gray-900 uppercase tracking-wider mb-2 flex items-center gap-1.5"><FileText className="w-3.5 h-3.5 text-gray-400" /> Resources</h4>
+                    <ul className="space-y-1.5">
+                      {job.resources.map((res, i) => (
+                        <li key={i}>
+                          <a href={res.link} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:text-blue-800 flex items-start gap-1">
+                            <LinkIcon className="w-3 h-3 mt-1 shrink-0" /> <span className="underline-offset-2 hover:underline">{res.title}</span>
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
