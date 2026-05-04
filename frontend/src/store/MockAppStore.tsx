@@ -13,6 +13,11 @@ export interface Opportunity {
   skillsRequired: string[];
   eligibleDepartments: string[];
   postedBy: string;
+  applicationType?: "external" | "internal";
+  applicationLink?: string;
+  formFields?: { fieldName: string; fieldType: string; required: boolean }[];
+  resources?: { title: string; link: string }[];
+  examDetails?: { date?: string; pattern?: string };
 }
 
 export interface User {
@@ -37,6 +42,9 @@ interface AppContextType {
   watchlist: string[];
   toggleWatchlist: (id: string) => void;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
+  appliedJobs: string[];
+  addAppliedJob: (id: string) => void;
+  updateOpportunity: (id: string, op: any) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -45,6 +53,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [watchlist, setWatchlist] = useState<string[]>([]);
+  const [appliedJobs, setAppliedJobs] = useState<string[]>([]);
+
+  const addAppliedJob = (id: string) => {
+    setAppliedJobs(prev => [...prev, id]);
+  };
 
   const login = async (role: Role, data: any) => {
     const endpoint = role === "Student" ? "/api/auth/student" : role === "Faculty" ? "/api/auth/faculty" : "/api/auth/admin";
@@ -71,10 +84,21 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           id: j._id,
           companyName: j.company,
           eligibleDepartments: j.departmentsEligible,
+          applicationType: j.applicationType,
+          applicationLink: j.applicationLink,
+          formFields: j.formFields,
+          resources: j.resources,
+          examDetails: j.examDetails,
         }));
         setOpportunities(mapped);
       } catch (err) {
         console.error("Failed to fetch jobs", err);
+      }
+      try {
+        const appsRes = await axios.get(`/api/student/applications/${user._id}`);
+        setAppliedJobs(appsRes.data);
+      } catch (err) {
+        console.error("Failed to fetch applied jobs", err);
       }
     } else if (user?.role === "Faculty") {
       try {
@@ -84,6 +108,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           id: j._id,
           companyName: j.company,
           eligibleDepartments: j.departmentsEligible,
+          applicationType: j.applicationType,
+          applicationLink: j.applicationLink,
+          formFields: j.formFields,
+          resources: j.resources,
+          examDetails: j.examDetails,
         }));
         setOpportunities(mapped);
       } catch (err) {
@@ -111,10 +140,41 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         id: res.data._id,
         companyName: res.data.company,
         eligibleDepartments: res.data.departmentsEligible,
+        applicationType: res.data.applicationType,
+        applicationLink: res.data.applicationLink,
+        formFields: res.data.formFields,
+        resources: res.data.resources,
+        examDetails: res.data.examDetails,
       };
       setOpportunities((prev) => [newJob, ...prev]);
     } catch (err) {
       console.error("Failed to add job", err);
+      throw err;
+    }
+  };
+
+  const updateOpportunity = async (id: string, op: any) => {
+    try {
+      const payload = {
+        ...op,
+        company: op.companyName,
+        departmentsEligible: op.eligibleDepartments,
+      };
+      const res = await axios.put(`/api/faculty/jobs/${id}`, payload);
+      const updatedJob = {
+        ...res.data,
+        id: res.data._id,
+        companyName: res.data.company,
+        eligibleDepartments: res.data.departmentsEligible,
+        applicationType: res.data.applicationType,
+        applicationLink: res.data.applicationLink,
+        formFields: res.data.formFields,
+        resources: res.data.resources,
+        examDetails: res.data.examDetails,
+      };
+      setOpportunities((prev) => prev.map((j) => (j.id === id ? updatedJob : j)));
+    } catch (err) {
+      console.error("Failed to update job", err);
       throw err;
     }
   };
@@ -134,9 +194,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         opportunities,
         fetchOpportunities,
         addOpportunity,
+        updateOpportunity,
         watchlist,
         toggleWatchlist,
-        setUser
+        setUser,
+        appliedJobs,
+        addAppliedJob,
       }}
     >
       {children}

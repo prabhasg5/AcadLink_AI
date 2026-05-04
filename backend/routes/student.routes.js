@@ -23,6 +23,17 @@ router.get("/jobs/:studentId", async (req, res) => {
   res.json(jobs);
 });
 
+// Get student's applied job IDs
+router.get("/applications/:studentId", async (req, res) => {
+  try {
+    const applications = await Application.find({ studentId: req.params.studentId });
+    const appliedJobIds = applications.map(app => app.jobId);
+    res.json(appliedJobIds);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch applied jobs" });
+  }
+});
+
 // Add to watchlist
 router.post("/watchlist", async (req, res) => {
   const data = await Watchlist.create(req.body);

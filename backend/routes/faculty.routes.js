@@ -10,6 +10,16 @@ router.post("/add-job", async (req, res) => {
   res.json(job);
 });
 
+// Update Job
+router.put("/jobs/:id", async (req, res) => {
+  try {
+    const job = await Job.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(job);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update job" });
+  }
+});
+
 // Get jobs by faculty
 router.get("/jobs/:facultyName", async (req, res) => {
   try {
@@ -17,6 +27,16 @@ router.get("/jobs/:facultyName", async (req, res) => {
     res.json(jobs);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch jobs" });
+  }
+});
+
+// Get applications for a specific job
+router.get("/jobs/:jobId/applications", async (req, res) => {
+  try {
+    const applications = await Application.find({ jobId: req.params.jobId }).sort({ _id: -1 });
+    res.json(applications);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch applications" });
   }
 });
 

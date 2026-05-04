@@ -5,15 +5,50 @@ import { JobCard } from "@/src/components/JobCard";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/src/components/ui/Card";
 import { Button } from "@/src/components/ui/Button";
 import { Badge } from "@/src/components/ui/Badge";
-import { Upload, FileText, CheckCircle2, ChevronRight, Target, AlertCircle } from "lucide-react";
+import { Input } from "@/src/components/ui/Input";
+import { Upload, FileText, CheckCircle2, ChevronRight, Target, AlertCircle, X, Send, ExternalLink } from "lucide-react";
 
 export function StudentDashboard() {
-  const { user, opportunities, watchlist, toggleWatchlist, setUser } = useAppContext();
+  const { user, opportunities, watchlist, toggleWatchlist, setUser, appliedJobs, addAppliedJob } = useAppContext();
   const [selectedJobForAnalysis, setSelectedJobForAnalysis] = useState<Opportunity | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isAnalysing, setIsAnalysing] = useState(false);
   const [analysisReport, setAnalysisReport] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [selectedJobForApply, setSelectedJobForApply] = useState<Opportunity | null>(null);
+  const [applyFormData, setApplyFormData] = useState<Record<string, string>>({});
+  const [isApplying, setIsApplying] = useState(false);
+
+  const handleApplyClick = (job: Opportunity) => {
+    if (job.applicationType === "external" && job.applicationLink) {
+      window.open(job.applicationLink, "_blank");
+    } else {
+      setSelectedJobForApply(job);
+      setApplyFormData({});
+    }
+  };
+
+  const submitApplication = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedJobForApply || !user) return;
+    setIsApplying(true);
+    try {
+      await axios.post("/api/student/apply", {
+        studentId: user._id,
+        jobId: selectedJobForApply.id,
+        formData: applyFormData
+      });
+      alert("Application submitted successfully!");
+      addAppliedJob(selectedJobForApply.id);
+      setSelectedJobForApply(null);
+    } catch (err) {
+      console.error("Failed to apply", err);
+      alert("Failed to apply. Please try again.");
+    } finally {
+      setIsApplying(false);
+    }
+  };
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
@@ -164,6 +199,8 @@ export function StudentDashboard() {
                   isWatchlisted={watchlist.includes(job.id)}
                   onToggleWatchlist={() => toggleWatchlist(job.id)}
                   onAnalyse={() => handleAnalyse(job)}
+                  onApply={() => handleApplyClick(job)}
+                  hasApplied={appliedJobs.includes(job.id)}
                 />
                 
                 {selectedJobForAnalysis?.id === job.id && (
@@ -232,6 +269,13 @@ export function StudentDashboard() {
                                     </ul>
                                   </div>
                                 )}
+
+                                <div className="pt-4 mt-2 border-t border-gray-100 flex justify-end">
+                                   <Button onClick={() => handleApplyClick(job)} className="bg-blue-600 hover:bg-blue-700 text-white">
+                                     {job.applicationType === "external" ? <ExternalLink className="w-4 h-4 mr-1.5" /> : <Send className="w-4 h-4 mr-1.5" />}
+                                     Apply Now
+                                   </Button>
+                                </div>
                               </>
                             )}
                           </>
@@ -251,6 +295,69 @@ export function StudentDashboard() {
           </div>
         )}
       </div>
+
+      {selectedJobForApply && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
+          <Card className="w-full max-w-md shadow-xl overflow-y-auto max-h-[90vh]">
+            <CardHeader className="border-b border-gray-100 pb-4 relative">
+              <button 
+                onClick={() => setSelectedJobForApply(null)}
+                className="absolute right-4 top-4 text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <CardTitle>Apply for {selectedJobForApply.companyName}</CardTitle>
+              <CardDescription>Please provide the required information</CardDescription>
+            </CardHeader>
+            <CardContent className="p-6">
+              <form onSubmit={submitApplication} className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">Name</label>
+                  <Input value={user?.name || ""} disabled className="bg-gray-50 text-gray-500" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">Email</label>
+                  <Input value={user?.email || ""} disabled className="bg-gray-50 text-gray-500" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">Roll Number</label>
+                  <Input value={user?.rollNumber || ""} disabled className="bg-gray-50 text-gray-500" />
+                </div>
+                
+                {selectedJobForApply.formFields?.map((field, i) => (
+                  <div key={i} className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      {field.fieldName} {field.required && <span className="text-red-500">*</span>}
+                    </label>
+                    {field.fieldType === 'textarea' ? (
+                      <textarea 
+                        className="flex min-h-[80px] w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                        required={field.required}
+                        value={applyFormData[field.fieldName] || ""}
+                        onChange={(e) => setApplyFormData({...applyFormData, [field.fieldName]: e.target.value})}
+                      />
+                    ) : (
+                      <Input 
+                        type={field.fieldType === 'number' ? 'number' : 'text'}
+                        required={field.required}
+                        value={applyFormData[field.fieldName] || ""}
+                        onChange={(e) => setApplyFormData({...applyFormData, [field.fieldName]: e.target.value})}
+                      />
+                    )}
+                  </div>
+                ))}
+                
+                <div className="pt-4 flex gap-3">
+                  <Button type="button" variant="ghost" onClick={() => setSelectedJobForApply(null)} className="flex-1">Cancel</Button>
+                  <Button type="submit" className="flex-1" disabled={isApplying}>
+                    {isApplying ? "Submitting..." : "Submit Application"}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

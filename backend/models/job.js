@@ -24,7 +24,19 @@ const jobSchema = new mongoose.Schema({
       fieldType: String,
       required: Boolean
     }
-  ]
+  ],
+
+  resources: [
+    {
+      title: String,
+      link: String
+    }
+  ],
+
+  examDetails: {
+    date: Date,
+    pattern: String
+  }
 });
 
 export default mongoose.model("Job", jobSchema);
