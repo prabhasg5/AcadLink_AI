@@ -1,6 +1,6 @@
 import React from "react";
 import { Outlet, Navigate, Link, useLocation } from "react-router-dom";
-import { useAppContext } from "@/src/store/MockAppStore";
+import { useAppContext } from "@/src/store/AppStore";
 import { Button } from "@/src/components/ui/Button";
 import { LogOut, LayoutDashboard, Briefcase, Bookmark, PlusCircle, Users } from "lucide-react";
 

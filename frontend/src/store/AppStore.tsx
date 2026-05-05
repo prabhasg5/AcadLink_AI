@@ -34,7 +34,6 @@ export interface User {
 
 interface AppContextType {
   user: User | null;
-  login: (role: Role, data: any) => Promise<void>;
   logout: () => void;
   opportunities: Opportunity[];
   fetchOpportunities: () => Promise<void>;
@@ -93,21 +92,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const addAppliedJob = (id: string) => {
     setAppliedJobs(prev => [...prev, id]);
-  };
-
-  const login = async (role: Role, data: any) => {
-    const endpoint = role === "Student" ? "/api/auth/student" : role === "Faculty" ? "/api/auth/faculty" : "/api/auth/admin";
-    try {
-      const res = await axios.post(endpoint, data);
-      const { token, ...userData } = res.data;
-      if (token) {
-        localStorage.setItem("token", token);
-      }
-      setUser({ ...userData, role });
-    } catch (err) {
-      console.error("Login failed", err);
-      throw err;
-    }
   };
 
   const logout = () => {
@@ -248,7 +232,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     <AppContext.Provider
       value={{
         user,
-        login,
         logout,
         opportunities,
         fetchOpportunities,

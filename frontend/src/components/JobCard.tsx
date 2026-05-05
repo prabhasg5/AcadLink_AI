@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Opportunity } from "@/src/store/MockAppStore";
+import { Opportunity } from "@/src/store/AppStore";
 import { Card, CardContent } from "@/src/components/ui/Card";
 import { Badge } from "@/src/components/ui/Badge";
 import { Building2, DollarSign, Bookmark, BookmarkCheck, BarChart, Send, ExternalLink, Calendar, FileText, Link as LinkIcon, CheckCircle2 } from "lucide-react";

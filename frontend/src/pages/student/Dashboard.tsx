@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import axios from "axios";
-import { useAppContext, Opportunity } from "@/src/store/MockAppStore";
+import { useAppContext, Opportunity } from "@/src/store/AppStore";
 import { JobCard } from "@/src/components/JobCard";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/src/components/ui/Card";
 import { Button } from "@/src/components/ui/Button";

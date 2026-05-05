@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { Navigate } from "react-router-dom";
-import { useAppContext, Role } from "@/src/store/MockAppStore";
+import axios from "axios";
+import { useAppContext, Role } from "@/src/store/AppStore";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/src/components/ui/Card";
 import { Briefcase, UserIcon, GraduationCap, BriefcaseBusiness, Shield, Loader2 } from "lucide-react";
 
 export function Login() {
-  const { user, login, isAuthLoading } = useAppContext();
+  const { user, setUser, isAuthLoading } = useAppContext();
   const [selectedRole, setSelectedRole] = useState<Role>("Student");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,9 +30,21 @@ export function Login() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await login(selectedRole, { email, password });
+      // Actually hit the backend login routes directly from the component
+      const endpoint = selectedRole === "Student" ? "/api/auth/student" 
+                     : selectedRole === "Faculty" ? "/api/auth/faculty" 
+                     : "/api/auth/admin";
+                     
+      const res = await axios.post(endpoint, { email, password });
+      
+      const { token, ...userData } = res.data;
+      if (token) {
+        localStorage.setItem("token", token);
+      }
+      setUser({ ...userData, role: selectedRole });
     } catch (error) {
-      alert("Invalid credentials. Please try again.");
+      console.error("Login failed:", error);
+      alert("Invalid credentials. Please ensure your account exists in the database and try again.");
     } finally {
       setIsSubmitting(false);
     }

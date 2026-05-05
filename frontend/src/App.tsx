@@ -4,7 +4,7 @@
  */
 
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AppProvider } from "@/src/store/MockAppStore";
+import { AppProvider } from "@/src/store/AppStore";
 import { AppLayout } from "@/src/components/AppLayout";
 import { Login } from "@/src/pages/Login";
 import { StudentDashboard } from "@/src/pages/student/Dashboard";
