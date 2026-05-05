@@ -1,7 +1,7 @@
 import React from "react";
 import { useAppContext } from "@/src/store/MockAppStore";
 import { JobCard } from "@/src/components/JobCard";
-import { BookmarkIcon, X } from "lucide-react";
+import { BookmarkIcon, X, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import axios from "axios";
 import { Input } from "@/src/components/ui/Input";
@@ -16,6 +16,7 @@ export function StudentWatchlist() {
   const [selectedJobForApply, setSelectedJobForApply] = useState<any>(null);
   const [applyFormData, setApplyFormData] = useState<Record<string, string>>({});
   const [isApplying, setIsApplying] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
   const handleApplyClick = (job: any) => {
     if (job.applicationType === "external" && job.applicationLink) {
@@ -36,9 +37,9 @@ export function StudentWatchlist() {
         jobId: selectedJobForApply.id,
         formData: applyFormData
       });
-      alert("Application submitted successfully!");
       addAppliedJob(selectedJobForApply.id);
       setSelectedJobForApply(null);
+      setShowSuccessDialog(true);
     } catch (err) {
       console.error("Failed to apply", err);
       alert("Failed to apply. Please try again.");
@@ -138,6 +139,28 @@ export function StudentWatchlist() {
                   </Button>
                 </div>
               </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {showSuccessDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <Card className="w-full max-w-sm shadow-2xl border-0 ring-1 ring-gray-200/50 scale-100 animate-in zoom-in-95 duration-200">
+            <CardContent className="pt-8 pb-6 px-6 flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-5 shadow-inner">
+                <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Application Successful!</h3>
+              <p className="text-gray-500 text-sm mb-6">
+                Your application has been submitted to the faculty for review. You can track its status in your dashboard.
+              </p>
+              <Button 
+                onClick={() => setShowSuccessDialog(false)} 
+                className="w-full bg-gray-900 hover:bg-gray-800 text-white shadow-md"
+              >
+                Continue
+              </Button>
             </CardContent>
           </Card>
         </div>
