@@ -45,6 +45,7 @@ interface AppContextType {
   appliedJobs: string[];
   addAppliedJob: (id: string) => void;
   updateOpportunity: (id: string, op: any) => Promise<void>;
+  isAuthLoading: boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -54,6 +55,41 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [watchlist, setWatchlist] = useState<string[]>([]);
   const [appliedJobs, setAppliedJobs] = useState<string[]>([]);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+
+  useEffect(() => {
+    // Add a request interceptor to attach the token
+    const interceptor = axios.interceptors.request.use(
+      (config) => {
+        const token = localStorage.getItem("token");
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
+    const restoreSession = async () => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          const res = await axios.get("/api/auth/me");
+          setUser(res.data);
+        } catch (error) {
+          console.error("Session restore failed", error);
+          localStorage.removeItem("token");
+        }
+      }
+      setIsAuthLoading(false);
+    };
+
+    restoreSession();
+
+    return () => {
+      axios.interceptors.request.eject(interceptor);
+    };
+  }, []);
 
   const addAppliedJob = (id: string) => {
     setAppliedJobs(prev => [...prev, id]);
@@ -63,7 +99,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const endpoint = role === "Student" ? "/api/auth/student" : role === "Faculty" ? "/api/auth/faculty" : "/api/auth/admin";
     try {
       const res = await axios.post(endpoint, data);
-      setUser({ ...res.data, role });
+      const { token, ...userData } = res.data;
+      if (token) {
+        localStorage.setItem("token", token);
+      }
+      setUser({ ...userData, role });
     } catch (err) {
       console.error("Login failed", err);
       throw err;
@@ -71,6 +111,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
+    localStorage.removeItem("token");
     setUser(null);
     setWatchlist([]);
   };
@@ -117,6 +158,24 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         setOpportunities(mapped);
       } catch (err) {
         console.error("Failed to fetch faculty jobs", err);
+      }
+    } else if (user?.role === "Admin") {
+      try {
+        const res = await axios.get("/api/admin/jobs");
+        const mapped = res.data.map((j: any) => ({
+          ...j,
+          id: j._id,
+          companyName: j.company,
+          eligibleDepartments: j.departmentsEligible,
+          applicationType: j.applicationType,
+          applicationLink: j.applicationLink,
+          formFields: j.formFields,
+          resources: j.resources,
+          examDetails: j.examDetails,
+        }));
+        setOpportunities(mapped);
+      } catch (err) {
+        console.error("Failed to fetch admin jobs", err);
       }
     }
   };
@@ -200,6 +259,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         setUser,
         appliedJobs,
         addAppliedJob,
+        isAuthLoading,
       }}
     >
       {children}

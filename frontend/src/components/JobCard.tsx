@@ -17,13 +17,23 @@ interface JobCardProps {
 
 export function JobCard({ job, isWatchlisted, onToggleWatchlist, onAnalyse, onApply, showActions = true, hasApplied = false }: JobCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [imageError, setImageError] = useState(false);
   return (
     <Card className="hover:border-blue-200 transition-colors duration-200 overflow-hidden group">
       <CardContent className="p-5">
         <div className="flex flex-col sm:flex-row gap-5">
           {/* Logo Placeholder */}
-          <div className="w-12 h-12 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0">
-            <Building2 className="w-6 h-6 text-gray-400" />
+          <div className={`w-12 h-12 rounded-lg ${imageError ? 'bg-gray-50' : 'bg-white'} border border-gray-100 flex items-center justify-center shrink-0 shadow-sm overflow-hidden p-1`}>
+            {!imageError ? (
+              <img
+                src={`https://img.logo.dev/${job.companyName.toLowerCase().replace(/[^a-z0-9]/g, '')}.com?token=pk_MIJFB2KkRuWQOX7rIRGaAQ&retina=true`}
+                alt={`${job.companyName} logo`}
+                className="w-full h-full object-contain"
+                onError={() => setImageError(true)}
+              />
+            ) : (
+              <Building2 className="w-6 h-6 text-gray-400" />
+            )}
           </div>
 
           <div className="flex-1 min-w-0">
@@ -54,32 +64,32 @@ export function JobCard({ job, isWatchlisted, onToggleWatchlist, onAnalyse, onAp
               </div>
 
               {showActions && (
-                 <div className="flex items-center gap-2 shrink-0">
-                   {onAnalyse && (
-                      <Button variant="outline" size="sm" onClick={onAnalyse} className="text-indigo-600 border-indigo-200 hover:bg-indigo-50">
-                        <BarChart className="w-4 h-4 mr-1.5" />
-                        Analyse Fit
+                <div className="flex items-center gap-2 shrink-0">
+                  {onAnalyse && (
+                    <Button variant="outline" size="sm" onClick={onAnalyse} className="text-indigo-600 border-indigo-200 hover:bg-indigo-50">
+                      <BarChart className="w-4 h-4 mr-1.5" />
+                      Analyse Fit
+                    </Button>
+                  )}
+                  {onApply && (
+                    hasApplied ? (
+                      <Button size="sm" disabled className="bg-emerald-50 text-emerald-700 border border-emerald-200 opacity-100 cursor-not-allowed">
+                        <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                        Applied
                       </Button>
-                   )}
-                   {onApply && (
-                     hasApplied ? (
-                       <Button size="sm" disabled className="bg-emerald-50 text-emerald-700 border border-emerald-200 opacity-100 cursor-not-allowed">
-                          <CheckCircle2 className="w-4 h-4 mr-1.5" />
-                          Applied
-                       </Button>
-                     ) : (
-                       <Button size="sm" onClick={onApply} className="bg-blue-600 hover:bg-blue-700 text-white">
-                          {job.applicationType === "external" ? <ExternalLink className="w-4 h-4 mr-1.5" /> : <Send className="w-4 h-4 mr-1.5" />}
-                          Apply
-                       </Button>
-                     )
-                   )}
-                   {onToggleWatchlist && (
-                      <Button variant="ghost" size="icon" onClick={onToggleWatchlist} className={isWatchlisted ? "text-blue-600" : "text-gray-400 hover:text-gray-900"}>
-                        {isWatchlisted ? <BookmarkCheck className="w-5 h-5 fill-current" /> : <Bookmark className="w-5 h-5" />}
+                    ) : (
+                      <Button size="sm" onClick={onApply} className="bg-blue-600 hover:bg-blue-700 text-white">
+                        {job.applicationType === "external" ? <ExternalLink className="w-4 h-4 mr-1.5" /> : <Send className="w-4 h-4 mr-1.5" />}
+                        Apply
                       </Button>
-                   )}
-                 </div>
+                    )
+                  )}
+                  {onToggleWatchlist && (
+                    <Button variant="ghost" size="icon" onClick={onToggleWatchlist} className={isWatchlisted ? "text-blue-600" : "text-gray-400 hover:text-gray-900"}>
+                      {isWatchlisted ? <BookmarkCheck className="w-5 h-5 fill-current" /> : <Bookmark className="w-5 h-5" />}
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
 
@@ -88,8 +98,8 @@ export function JobCard({ job, isWatchlisted, onToggleWatchlist, onAnalyse, onAp
                 {job.description}
               </p>
               {job.description.length > 120 && (
-                <button 
-                  onClick={() => setIsExpanded(!isExpanded)} 
+                <button
+                  onClick={() => setIsExpanded(!isExpanded)}
                   className="text-xs font-medium text-blue-600 hover:text-blue-800 mt-1"
                 >
                   {isExpanded ? "See less" : "See more"}
@@ -104,11 +114,11 @@ export function JobCard({ job, isWatchlisted, onToggleWatchlist, onAnalyse, onAp
                 </Badge>
               ))}
             </div>
-            
+
             <div className="mt-3 flex flex-wrap gap-2">
               {job.eligibleDepartments && job.eligibleDepartments.length > 0 && (
                 <Badge variant="outline" className="text-xs text-gray-500 font-normal border-gray-200">
-                   {job.eligibleDepartments.join(", ")} Eligible
+                  {job.eligibleDepartments.join(", ")} Eligible
                 </Badge>
               )}
             </div>
@@ -116,7 +126,7 @@ export function JobCard({ job, isWatchlisted, onToggleWatchlist, onAnalyse, onAp
             {/* Exam Details & Resources */}
             {(job.examDetails?.date || job.examDetails?.pattern || (job.resources && job.resources.length > 0)) && (
               <div className="mt-4 pt-4 border-t border-gray-100 flex flex-col sm:flex-row gap-6">
-                
+
                 {job.examDetails && (job.examDetails.date || job.examDetails.pattern) && (
                   <div className="flex-1">
                     <h4 className="text-xs font-semibold text-gray-900 uppercase tracking-wider mb-2 flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-gray-400" /> Exam Details</h4>

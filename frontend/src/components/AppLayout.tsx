@@ -5,8 +5,16 @@ import { Button } from "@/src/components/ui/Button";
 import { LogOut, LayoutDashboard, Briefcase, Bookmark, PlusCircle, Users } from "lucide-react";
 
 export function AppLayout() {
-  const { user, logout } = useAppContext();
+  const { user, logout, isAuthLoading } = useAppContext();
   const location = useLocation();
+
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   if (!user) {
     return <Navigate to="/" replace />;
