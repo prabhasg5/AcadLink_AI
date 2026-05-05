@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { useAppContext } from "@/src/store/MockAppStore";
+import { useAppContext } from "@/src/store/AppStore";
 import { JobCard } from "@/src/components/JobCard";
 import { Button } from "@/src/components/ui/Button";
 import { PlusCircle, Search, Users, X, Download, PenBox } from "lucide-react";

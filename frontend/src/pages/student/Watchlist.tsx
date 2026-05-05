@@ -1,5 +1,5 @@
 import React from "react";
-import { useAppContext } from "@/src/store/MockAppStore";
+import { useAppContext } from "@/src/store/AppStore";
 import { JobCard } from "@/src/components/JobCard";
 import { BookmarkIcon, X, CheckCircle2 } from "lucide-react";
 import { useState } from "react";

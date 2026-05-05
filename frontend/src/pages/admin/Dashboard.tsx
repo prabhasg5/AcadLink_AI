@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useAppContext } from "@/src/store/MockAppStore";
+import { useAppContext } from "@/src/store/AppStore";
 import { Card, CardContent } from "@/src/components/ui/Card";
 import { Badge } from "@/src/components/ui/Badge";
 import { Users, Building2, Briefcase, FileText, Trash2, Eye, GraduationCap } from "lucide-react";
